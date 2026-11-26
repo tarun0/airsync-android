@@ -21,6 +21,21 @@ Needs the matching Mac fork for the multi-device parts. Items marked (Plus) are 
 - **Android reconnect and UI tweaks**: exponential reconnect backoff with jitter, optional Wi-Fi whitelist for reconnects, hide-when-idle media bar, shorter clipboard confirmation pill.
 - **Fixes**: crash in the sections grid with no entries, notification dismiss (X) hit target, `macInfo` ack so secondary phones finish their handshake, clipboard JSON escaping on Android.
 
+## The root clipboard helper (clipwatch.dex)
+
+`app/src/main/assets/clipwatch.dex` is a small compiled helper that the app runs through root (or shell) to watch the Android clipboard in the background, so no Accessibility service is needed. The binary is the compiled output of the source in `tools/clipbridge/ClipWatch.java`.
+
+Rebuild it yourself:
+
+- Prerequisites: a JDK (javac; built here with OpenJDK 27 using `-source 11 -target 11`), Android SDK build-tools providing `d8` on your `PATH` (tested with 36.0.0), and a platform `android.jar` (tested with android-37.1). The script picks the newest `$ANDROID_HOME/platforms/android-*/android.jar`; override with `ANDROID_JAR=/path/to/android.jar`.
+- Run: `ANDROID_HOME=/path/to/sdk sh tools/clipbridge/build.sh`. It compiles with javac, converts with `d8 --min-api 30`, and copies the result to `app/src/main/assets/clipwatch.dex`.
+- Verify: `shasum -a 256 app/src/main/assets/clipwatch.dex` (or `sha256sum`) before and after the rebuild and compare.
+
+Checked on the author's machine with the toolchain above: the rebuilt file was byte-identical to the committed one (SHA-256 `d77d36974f455afab37d51680175a041b2653498271e928ecc03818510353448`). Builds are not guaranteed to be byte-reproducible with a different JDK, build-tools or android.jar; a differing hash then does not by itself mean the binary differs in behaviour, so compare the sources and decompile if in doubt.
+
+## Funding
+
+Any funding or payment for AirSync belongs to the original author (see the upstream links and `.github/FUNDING.yml`). This fork does not solicit or accept payments, and has no affiliation with the author's paid Plus/Pro offering beyond the upstream licence terms.
 ## More information
 
 Architecture, build instructions, operational gotchas, limits, testing notes, roadmap, upstream sync and licensing: [docs/MULTI_DEVICE.md](docs/MULTI_DEVICE.md).
