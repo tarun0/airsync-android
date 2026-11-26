@@ -36,3 +36,23 @@ local.properties
 .vscode/launch.json
 build/reports/problems/problems-report.html
 .agents/
+# Fork additions: never commit builds, local config or agent scratch
+DerivedData/
+build/
+*.apk
+*.aab
+*.app
+*.dmg
+*.pkg
+*.zip
+.claude/
+.env
+local.properties
+*.jks
+*.keystore
+*.p12
+*.pem
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+.DS_Store
