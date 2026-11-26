@@ -2,6 +2,8 @@
 
 Unofficial, community fork of AirSync that lets one Mac talk to several Android devices at once (for example a phone and a tablet). **This fork is not affiliated with, endorsed by or supported by the AirSync author.** All credit for AirSync goes to Sameera Wijerathna ([sameerasw](https://github.com/sameerasw)).
 
+> **Note:** The features added in this fork were developed with AI assistance and have not been tested thoroughly. There may be unintended bugs, and support from the fork maintainer ([@tarun0](https://github.com/tarun0)) is not guaranteed.
+
 - Upstream Mac app: https://github.com/sameerasw/airsync-mac
 - Upstream Android app: https://github.com/sameerasw/airsync-android
 - Official website: https://sameerasw.com/AirSync

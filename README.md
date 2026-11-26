@@ -8,6 +8,8 @@
 
 This fork is **not affiliated with or endorsed by the original author.** It is **source only**: no builds of any kind (no APK, no `.app`, no releases) are provided or should be redistributed. If you want the Plus/Pro features, buy/support them from the original author through the official website above, or compile the app yourself from source. The multi-device features of this fork sit behind the existing upstream Plus check, so builds that are not self-compiled still need the author's license. Upstream's `LICENSE` (MPL 2.0 plus Additional Terms) apply unchanged. The Android app has no Plus check of its own; the gate is in the Mac app.
 
+> **Note:** The features added in this fork were developed with AI assistance and have not been tested thoroughly. There may be unintended bugs, and support from the fork maintainer ([@tarun0](https://github.com/tarun0)) is not guaranteed.
+
 ## What this fork adds
 
 Needs the matching Mac fork for the multi-device parts. Items marked (Plus) are behind upstream's Plus check on the Mac.
