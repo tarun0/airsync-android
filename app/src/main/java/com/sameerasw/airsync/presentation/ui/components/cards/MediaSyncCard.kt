@@ -13,6 +13,8 @@ fun MediaSyncCard(
     onToggleSendNowPlaying: (Boolean) -> Unit,
     isMacMediaControlsEnabled: Boolean,
     onToggleMacMediaControls: (Boolean) -> Unit,
+    isHideIdleMediaBarEnabled: Boolean,
+    onToggleHideIdleMediaBar: (Boolean) -> Unit,
     onOpenExcludedApps: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -43,6 +45,14 @@ fun MediaSyncCard(
             description = "Show media controls when Mac is playing music",
             isChecked = isMacMediaControlsEnabled,
             onCheckedChange = onToggleMacMediaControls
+        )
+        IconToggleItem(
+            iconRes = R.drawable.rounded_smart_display_24,
+            title = "Hide player when idle",
+            description = "Only show the floating player while something is playing on the Mac",
+            isChecked = isHideIdleMediaBarEnabled,
+            onCheckedChange = onToggleHideIdleMediaBar,
+            enabled = isMacMediaControlsEnabled
         )
     }
 }

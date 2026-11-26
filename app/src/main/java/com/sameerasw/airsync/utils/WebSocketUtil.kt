@@ -67,6 +67,18 @@ object WebSocketUtil {
     private var autoReconnectStartTime: Long = 0L
     private var autoReconnectAttempts: Int = 0
 
+    // Growing gaps between reconnects: 10s, 20s, 40s, 80s, 160s, then every 5 minutes.
+    private val RECONNECT_BACKOFF_STEPS_MS =
+        longArrayOf(10_000L, 20_000L, 40_000L, 80_000L, 160_000L, 300_000L)
+    private const val RECONNECT_JITTER = 0.15
+
+    private fun nextReconnectDelayMs(attempt: Int): Long {
+        val base =
+            RECONNECT_BACKOFF_STEPS_MS[attempt.coerceIn(0, RECONNECT_BACKOFF_STEPS_MS.lastIndex)]
+        val jitter = 1.0 + (kotlin.random.Random.nextDouble() * 2.0 - 1.0) * RECONNECT_JITTER
+        return (base * jitter).toLong()
+    }
+
     // Callback for connection status changes
     private var onConnectionStatusChanged: ((Boolean) -> Unit)? = null
     private var onMessageReceived: ((String) -> Unit)? = null
@@ -918,11 +930,17 @@ object WebSocketUtil {
             try {
                 val ds = com.sameerasw.airsync.data.local.DataStoreManager.getInstance(context)
 
-                // 1. Retry Loop (Try last known IPs immediately and periodically)
+                // 1. Retry loop. Waits before each attempt with a growing gap:
+                //    10s, 20s, 40s, 80s, 160s, then every 5 min (all with ±15% jitter).
+                //    The counter resets on success, on manual connect, and when a network appears.
                 launch {
-                    var backoffMs = 2000L
-                    var failedStreak = 0
+                    var attempt = autoReconnectAttempts
                     while (autoReconnectActive.get() && !isConnected()) {
+                        val waitMs = nextReconnectDelayMs(attempt)
+                        Log.d(TAG, "Reconnect attempt ${attempt + 1} in ${waitMs}ms")
+                        delay(waitMs)
+                        if (!autoReconnectActive.get() || isConnected()) break
+
                         val manual = ds.getUserManuallyDisconnected().first()
                         val autoEnabled = ds.getAutoReconnectEnabled().first()
 
@@ -933,6 +951,23 @@ object WebSocketUtil {
                             )
                             cancelAutoReconnect()
                             break
+                        }
+
+                        // Only retry while on one of the whitelisted Wi-Fi networks, if any are set.
+                        // Anywhere else a socket attempt is a blind guess; wait for the right network.
+                        val allowedSsids = ds.getReconnectWifiSsids().first()
+                        if (allowedSsids.isNotEmpty() &&
+                            !WifiGate.isAllowed(context, allowedSsids)
+                        ) {
+                            Log.d(
+                                TAG,
+                                "Skipping reconnect: Wi-Fi '${WifiGate.currentSsid(context)}' " +
+                                        "not in whitelist $allowedSsids"
+                            )
+                            releaseWifiLock()
+                            attempt++
+                            autoReconnectAttempts = attempt
+                            continue
                         }
 
                         // Check network capabilities before attempting Wi-Fi socket reconnect
@@ -946,6 +981,7 @@ object WebSocketUtil {
                         val expandNetworking = ds.getExpandNetworkingEnabled().first()
                         val canAttemptWifiSocket = hasWifiOrVpn || expandNetworking
 
+                        var didAttempt = false
                         if (!isConnecting.get() && canAttemptWifiSocket) {
                             val last = ds.getLastConnectedDevice().first()
                             if (last != null) {
@@ -961,7 +997,7 @@ object WebSocketUtil {
                                     acquireWifiLock(context)
                                     Log.d(
                                         TAG,
-                                        "Proactive retry to $ips:$port (backoff: ${backoffMs}ms)"
+                                        "Proactive retry #${attempt + 1} to $ips:$port"
                                     )
                                     connect(
                                         context = context,
@@ -977,17 +1013,19 @@ object WebSocketUtil {
                                             }
                                         }
                                     )
+                                    didAttempt = true
                                 }
                             }
                         } else {
                             releaseWifiLock()
                         }
 
-                        delay(backoffMs)
-                        failedStreak++
-                        // Exponential backoff capped at 30 seconds after extended failures
-                        val maxCap = if (failedStreak > 10) 30_000L else 10_000L
-                        backoffMs = (backoffMs * 1.5).toLong().coerceAtMost(maxCap)
+                        // Only grow the gap when we actually tried; while offline (or while a
+                        // previous attempt is still in flight) stay on the current step.
+                        if (didAttempt) {
+                            attempt++
+                            autoReconnectAttempts = attempt
+                        }
                     }
                 }
 
@@ -1035,6 +1073,13 @@ object WebSocketUtil {
     fun requestAutoReconnect(context: Context) {
         // Only if not already connected or connecting
         if (isConnected() || isConnecting.get()) return
+        // A fresh network is a fresh chance: drop the accumulated backoff and retry from step one.
+        if (autoReconnectActive.get()) {
+            autoReconnectJob?.cancel()
+            autoReconnectJob = null
+            autoReconnectActive.set(false)
+            autoReconnectAttempts = 0
+        }
         tryStartAutoReconnect(context)
     }
 }

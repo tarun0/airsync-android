@@ -143,7 +143,7 @@ private fun ClipboardActionScreen(
                         } else {
                             uiState = ClipboardUiState.Error("Not connected")
                         }
-                        delay(1200)
+                        delay(400)
                         onFinished()
                     }
 
@@ -152,7 +152,7 @@ private fun ClipboardActionScreen(
                         ds.setUserManuallyDisconnected(false)
                         WebSocketUtil.requestAutoReconnect(context)
                         uiState = ClipboardUiState.Success
-                        delay(1200)
+                        delay(400)
                         onFinished()
                     }
 
@@ -165,7 +165,7 @@ private fun ClipboardActionScreen(
                         com.sameerasw.airsync.service.AirSyncService.stop(context)
                         ShortcutUtil.refreshShortcuts(context, false)
                         uiState = ClipboardUiState.Success
-                        delay(1200)
+                        delay(400)
                         onFinished()
                     }
 
@@ -179,14 +179,14 @@ private fun ClipboardActionScreen(
                         WebSocketUtil.requestAutoReconnect(context)
                         ShortcutUtil.refreshShortcuts(context, false)
                         uiState = ClipboardUiState.Success
-                        delay(1200)
+                        delay(400)
                         onFinished()
                     }
 
                     ShortcutUtil.DASH_ACTION_DISCONNECT -> {
                         WebSocketUtil.disconnect(context, manual = true)
                         uiState = ClipboardUiState.Success
-                        delay(1200)
+                        delay(400)
                         onFinished()
                     }
 
@@ -215,20 +215,20 @@ private fun ClipboardActionScreen(
                         if (!textToSync.isNullOrEmpty()) {
                             ClipboardSyncManager.syncTextToDesktop(textToSync)
                             uiState = ClipboardUiState.Success
-                            delay(1200)
+                            delay(400)
                             onFinished()
                         } else {
                             uiState = ClipboardUiState.Error(
                                 if (isShareAction) "Shared text empty" else "Clipboard empty"
                             )
-                            delay(1500)
+                            delay(600)
                             onFinished()
                         }
                     }
                 }
             } catch (e: Exception) {
                 uiState = ClipboardUiState.Error("Failed")
-                delay(1500)
+                delay(600)
                 onFinished()
             }
         }

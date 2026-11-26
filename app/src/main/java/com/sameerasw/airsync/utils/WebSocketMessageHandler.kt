@@ -114,11 +114,10 @@ object WebSocketMessageHandler {
             if (!text.isNullOrEmpty()) {
                 Log.d(TAG, "Clipboard update received from desktop: ${text.take(50)}...")
 
-                // Notify ViewModel/UI to add entry to clipboard history
-                onClipboardEntryReceived?.invoke(text)
-
-                // Update system clipboard
-                ClipboardSyncManager.handleClipboardUpdate(context, text)
+                // Update system clipboard (MULTI-DEVICE: false = echo/duplicate, skip history too)
+                if (ClipboardSyncManager.handleClipboardUpdate(context, text, data.optString("origin").ifEmpty { null })) {
+                    onClipboardEntryReceived?.invoke(text)
+                }
                 Log.d(TAG, "Clipboard updated from desktop: ${text.take(50)}...")
             } else {
                 Log.w(TAG, "Clipboard update received but text is empty")
@@ -546,6 +545,9 @@ object WebSocketMessageHandler {
                     Log.e(TAG, "macInfo data is null")
                     return@launch
                 }
+
+                // Mac just (re)connected: replay what is currently in the shade (Mac keeps its own list across restarts)
+                com.sameerasw.airsync.service.MediaNotificationListener.getInstance()?.replayActiveNotifications()
 
                 val macName = data.optString("name", "")
                 val isPlus = data.optBoolean("isPlusSubscription", false)

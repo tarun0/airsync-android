@@ -53,6 +53,7 @@ import com.sameerasw.airsync.domain.model.DeviceInfo
 import com.sameerasw.airsync.domain.model.UiState
 import com.sameerasw.airsync.presentation.ui.components.buttons.ListExpandToggleButton
 import com.sameerasw.airsync.presentation.ui.components.cards.ClipboardFeaturesCard
+import com.sameerasw.airsync.presentation.ui.components.cards.ReconnectWifiCard
 import com.sameerasw.airsync.presentation.ui.components.cards.DefaultTabCard
 import com.sameerasw.airsync.presentation.ui.components.cards.DeveloperModeCard
 import com.sameerasw.airsync.presentation.ui.components.cards.DeviceInfoCard
@@ -223,6 +224,13 @@ fun SettingsView(
                 )
 
                 ExpandNetworkingCard(context)
+
+                RoundedCardContainer {
+                    ReconnectWifiCard(
+                        ssids = uiState.reconnectWifiSsids,
+                        onSave = { viewModel.setReconnectWifiSsids(it) }
+                    )
+                }
             }
 
             AnimatedVisibility(
@@ -569,6 +577,10 @@ fun SettingsView(
                                 onToggleClipboardSync = { enabled: Boolean ->
                                     viewModel.setClipboardSyncEnabled(enabled)
                                 },
+                                isRootClipboardEnabled = uiState.isRootClipboardEnabled,
+                                onToggleRootClipboard = { enabled: Boolean ->
+                                    viewModel.setRootClipboardEnabled(enabled)
+                                },
                                 isContinueBrowsingEnabled = uiState.isContinueBrowsingEnabled,
                                 onToggleContinueBrowsing = { enabled: Boolean ->
                                     viewModel.setContinueBrowsingEnabled(enabled)
@@ -590,6 +602,10 @@ fun SettingsView(
                                 isMacMediaControlsEnabled = uiState.isMacMediaControlsEnabled,
                                 onToggleMacMediaControls = { enabled ->
                                     viewModel.setMacMediaControlsEnabled(enabled)
+                                },
+                                isHideIdleMediaBarEnabled = uiState.isHideIdleMediaBarEnabled,
+                                onToggleHideIdleMediaBar = { enabled ->
+                                    viewModel.setHideIdleMediaBar(enabled)
                                 },
                                 onOpenExcludedApps = {
                                     HapticUtil.performClick(haptics)

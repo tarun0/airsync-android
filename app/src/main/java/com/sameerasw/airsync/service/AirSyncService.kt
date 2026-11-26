@@ -21,6 +21,7 @@ import com.sameerasw.airsync.R
 import com.sameerasw.airsync.data.local.DataStoreManager
 import com.sameerasw.airsync.utils.DiscoveryMode
 import com.sameerasw.airsync.utils.MacDeviceStatusManager
+import com.sameerasw.airsync.utils.RootClipboardBridge
 import com.sameerasw.airsync.utils.ShortcutUtil
 import com.sameerasw.airsync.utils.discovery.DiscoveryOrchestrator
 import com.sameerasw.airsync.utils.WebDavServer
@@ -67,6 +68,7 @@ class AirSyncService : Service() {
         MacDeviceStatusManager.startMonitoring(this)
         registerNetworkCallback()
         WebSocketUtil.registerConnectionStatusListener(connectionStatusListener)
+        RootClipboardBridge.startWithPreference(applicationContext)
 
         val dataStoreManager = DataStoreManager.getInstance(applicationContext)
         scope.launch {
@@ -380,6 +382,7 @@ class AirSyncService : Service() {
     override fun onDestroy() {
         Log.d(TAG, "AirSyncService destroyed")
         serviceInstance = null
+        RootClipboardBridge.stop()
         WebSocketUtil.unregisterConnectionStatusListener(connectionStatusListener)
 
         networkCallback?.let {

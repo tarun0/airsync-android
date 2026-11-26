@@ -195,6 +195,11 @@ fun AirSyncMainScreen(
     val macStatus by MacDeviceStatusManager.macDeviceStatus.collectAsState()
     val albumArtBitmap by MacDeviceStatusManager.albumArt.collectAsState()
 
+    // Idle = no track at all, or nothing playing and no title (player closed on the Mac).
+    val isMacPlayerIdle = macStatus?.music?.let { it.title.isBlank() && !it.isPlaying } ?: true
+    val showMediaBar = uiState.isConnected &&
+            !(uiState.isHideIdleMediaBarEnabled && isMacPlayerIdle)
+
     // Sync volume and mute state with Mac status updates
     LaunchedEffect(macStatus?.music) {
         macStatus?.music?.let { music ->
@@ -1281,7 +1286,7 @@ fun AirSyncMainScreen(
                             verticalAlignment = Alignment.Bottom
                         ) {
                             AnimatedVisibility(
-                                visible = uiState.isConnected,
+                                visible = showMediaBar,
                                 enter = fadeIn() + expandHorizontally(),
                                 exit = fadeOut() + shrinkHorizontally(),
                                 modifier = Modifier.weight(1f)
@@ -1347,7 +1352,7 @@ fun AirSyncMainScreen(
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             AnimatedVisibility(
-                                visible = uiState.isConnected,
+                                visible = showMediaBar,
                                 enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
                                 exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom),
                             ) {

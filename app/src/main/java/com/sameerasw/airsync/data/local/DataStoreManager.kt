@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.sameerasw.airsync.domain.model.ConnectedDevice
 import com.sameerasw.airsync.domain.model.NetworkDeviceConnection
@@ -53,6 +54,9 @@ class DataStoreManager(private val context: Context) {
         private val DEVELOPER_MODE_VISIBLE = booleanPreferencesKey("developer_mode_visible")
         private val CLIPBOARD_SYNC_ENABLED = booleanPreferencesKey("clipboard_sync_enabled")
         private val CLIPBOARD_HISTORY_ENABLED = booleanPreferencesKey("clipboard_history_enabled")
+        private val ROOT_CLIPBOARD_ENABLED = booleanPreferencesKey("root_clipboard_enabled")
+        private val RECONNECT_WIFI_SSIDS = stringSetPreferencesKey("reconnect_wifi_ssids")
+        private val HIDE_IDLE_MEDIA_BAR = booleanPreferencesKey("hide_idle_media_bar")
         private val ICON_SYNC_COUNT = stringPreferencesKey("icon_sync_count")
         private val LAST_ICON_SYNC_DATE = stringPreferencesKey("last_icon_sync_date")
         private val USER_MANUALLY_DISCONNECTED = booleanPreferencesKey("user_manually_disconnected")
@@ -206,6 +210,43 @@ class DataStoreManager(private val context: Context) {
     fun getClipboardSyncEnabled(): Flow<Boolean> {
         return context.dataStore.data.map { preferences ->
             preferences[CLIPBOARD_SYNC_ENABLED] != false // Default to enabled
+        }
+    }
+
+    suspend fun setRootClipboardEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[ROOT_CLIPBOARD_ENABLED] = enabled
+        }
+    }
+
+    fun getRootClipboardEnabled(): Flow<Boolean> {
+        return context.dataStore.data.map { preferences ->
+            preferences[ROOT_CLIPBOARD_ENABLED] == true // Off unless explicitly enabled
+        }
+    }
+
+    suspend fun setReconnectWifiSsids(ssids: Set<String>) {
+        context.dataStore.edit { preferences ->
+            preferences[RECONNECT_WIFI_SSIDS] = ssids
+        }
+    }
+
+    /** Empty set means "reconnect on any network". */
+    fun getReconnectWifiSsids(): Flow<Set<String>> {
+        return context.dataStore.data.map { preferences ->
+            preferences[RECONNECT_WIFI_SSIDS] ?: emptySet()
+        }
+    }
+
+    suspend fun setHideIdleMediaBar(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[HIDE_IDLE_MEDIA_BAR] = enabled
+        }
+    }
+
+    fun getHideIdleMediaBar(): Flow<Boolean> {
+        return context.dataStore.data.map { preferences ->
+            preferences[HIDE_IDLE_MEDIA_BAR] == true // Off unless explicitly enabled
         }
     }
 

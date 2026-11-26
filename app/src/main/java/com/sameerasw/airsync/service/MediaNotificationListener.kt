@@ -619,7 +619,24 @@ class MediaNotificationListener : NotificationListenerService() {
         }
     }
 
-    private fun processNotificationForSync(sbn: StatusBarNotification) {
+    /** Re-send the active, non-ongoing notifications (oldest first, max 30) after a Mac (re)connects; flagged replay so the Mac skips banners. */
+    fun replayActiveNotifications() {
+        serviceScope.launch {
+            try {
+                val active = (activeNotifications ?: return@launch)
+                    .filter { (it.notification.flags and (Notification.FLAG_ONGOING_EVENT or Notification.FLAG_GROUP_SUMMARY)) == 0 }
+                    .sortedBy { it.postTime }.takeLast(30)
+                for (sbn in active) {
+                    processNotificationForSync(sbn, replay = true)
+                    kotlinx.coroutines.delay(60)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Replay of active notifications failed: ${e.message}")
+            }
+        }
+    }
+
+    private fun processNotificationForSync(sbn: StatusBarNotification, replay: Boolean = false) {
         serviceScope.launch {
             try {
                 // Skip notifications from AirSync itself to prevent feedback loops
@@ -686,7 +703,7 @@ class MediaNotificationListener : NotificationListenerService() {
                     }
 
                     // Check for duplicate notifications
-                    if (isDuplicateNotification(sbn.packageName, body)) {
+                    if (!replay && isDuplicateNotification(sbn.packageName, body)) {
                         Log.d(TAG, "Duplicate notification detected, skipping sync: $title")
                         return@launch
                     }
@@ -764,7 +781,8 @@ class MediaNotificationListener : NotificationListenerService() {
                             progress = progress,
                             progressMax = progressMax,
                             progressIndeterminate = progressIndeterminate,
-                            ongoing = ongoing
+                            ongoing = ongoing,
+                            replay = replay
                         )
                     )
 

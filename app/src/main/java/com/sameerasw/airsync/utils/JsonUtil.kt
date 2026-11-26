@@ -102,7 +102,8 @@ object JsonUtil {
         progress: Int? = null,
         progressMax: Int? = null,
         progressIndeterminate: Boolean? = null,
-        ongoing: Boolean? = null
+        ongoing: Boolean? = null,
+        replay: Boolean = false
     ): String {
         val actionsJson = if (actions.isNotEmpty()) {
             val items = actions.joinToString(",") { (name, type) ->
@@ -115,7 +116,7 @@ object JsonUtil {
         val progressJson = if (progress != null) ",\"progress\":$progress" else ""
         val progressMaxJson = if (progressMax != null) ",\"progressMax\":$progressMax" else ""
         val progressIndeterminateJson = if (progressIndeterminate != null) ",\"progressIndeterminate\":$progressIndeterminate" else ""
-        val ongoingJson = if (ongoing != null) ",\"ongoing\":$ongoing" else ""
+        val ongoingJson = (if (ongoing != null) ",\"ongoing\":$ongoing" else "") + (if (replay) ",\"replay\":true" else "")
         return """{"type":"notification","data":{"id":"$id","title":"${escape(title)}","body":"${
             escape(
                 body
@@ -252,10 +253,12 @@ object JsonUtil {
     /**
      * Creates a JSON string for clipboard updates
      */
-    fun createClipboardUpdateJson(text: String): String {
+    fun createClipboardUpdateJson(text: String, origin: String? = null): String {
         // Escape quotes and newlines in the text
         val escapedText = text.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")
-        return """{"type":"clipboardUpdate","data":{"text":"$escapedText"}}"""
+        // MULTI-DEVICE: optional origin + message id (older Macs ignore unknown keys)
+        val originJson = if (origin.isNullOrEmpty()) "" else ",\"origin\":\"${escape(origin)}\""
+        return """{"type":"clipboardUpdate","data":{"text":"$escapedText"$originJson,"id":"${java.util.UUID.randomUUID()}"}}"""
     }
 
     /**

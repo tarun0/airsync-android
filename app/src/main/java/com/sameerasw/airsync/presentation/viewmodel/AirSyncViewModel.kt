@@ -393,6 +393,9 @@ class AirSyncViewModel(
             val isNotificationSyncEnabled = repository.getNotificationSyncEnabled().first()
             val isDeveloperMode = repository.getDeveloperMode().first()
             val isClipboardSyncEnabled = repository.getClipboardSyncEnabled().first()
+            val isRootClipboardEnabled = repository.getRootClipboardEnabled().first()
+            val reconnectWifiSsids = repository.getReconnectWifiSsids().first()
+            val isHideIdleMediaBarEnabled = repository.getHideIdleMediaBar().first()
             val isAutoReconnectEnabled = repository.getAutoReconnectEnabled().first()
             val lastConnectedSymmetricKey = lastConnected?.symmetricKey
             val isContinueBrowsingEnabled = repository.getContinueBrowsingEnabled().first()
@@ -457,6 +460,9 @@ class AirSyncViewModel(
                 isNotificationSyncEnabled = isNotificationSyncEnabled,
                 isDeveloperMode = isDeveloperMode,
                 isClipboardSyncEnabled = isClipboardSyncEnabled,
+                isRootClipboardEnabled = isRootClipboardEnabled,
+                reconnectWifiSsids = reconnectWifiSsids,
+                isHideIdleMediaBarEnabled = isHideIdleMediaBarEnabled,
                 isAutoReconnectEnabled = isAutoReconnectEnabled,
                 isConnected = currentlyConnected,
                 symmetricKey = symmetricKey ?: lastConnectedSymmetricKey,
@@ -701,6 +707,27 @@ class AirSyncViewModel(
         _uiState.value = _uiState.value.copy(isClipboardSyncEnabled = enabled)
         viewModelScope.launch {
             repository.setClipboardSyncEnabled(enabled)
+        }
+    }
+
+    fun setRootClipboardEnabled(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(isRootClipboardEnabled = enabled)
+        viewModelScope.launch {
+            repository.setRootClipboardEnabled(enabled)
+        }
+    }
+
+    fun setReconnectWifiSsids(ssids: Set<String>) {
+        _uiState.value = _uiState.value.copy(reconnectWifiSsids = ssids)
+        viewModelScope.launch {
+            repository.setReconnectWifiSsids(ssids)
+        }
+    }
+
+    fun setHideIdleMediaBar(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(isHideIdleMediaBarEnabled = enabled)
+        viewModelScope.launch {
+            repository.setHideIdleMediaBar(enabled)
         }
     }
 

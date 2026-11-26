@@ -18,6 +18,10 @@ object ClipboardSyncManager {
     private var lastSentText: String? = null
     private var lastReceivedText: String? = null
     private var syncJob: Job? = null
+    // MULTI-DEVICE: stable per-install id (same value used in the handshake) and time of last applied remote text
+    private var ownId: String? = null
+    private var lastReceivedAt = 0L
+    private var lastSentAt = 0L
     private val syncScope = CoroutineScope(Dispatchers.IO)
 
     // Callback for clipboard history tracking
@@ -31,6 +35,7 @@ object ClipboardSyncManager {
      * Start clipboard sync
      */
     fun startSync(context: Context) {
+        ownId = DeviceInfoUtil.getDeviceId(context) // MULTI-DEVICE
         if (isEnabled) {
             Log.d(TAG, "Clipboard sync already enabled")
             return
@@ -79,8 +84,8 @@ object ClipboardSyncManager {
 
         syncScope.launch(Dispatchers.IO) {
             try {
-                lastSentText = text
-                val clipboardJson = JsonUtil.createClipboardUpdateJson(text)
+                lastSentText = text; lastSentAt = System.currentTimeMillis()
+                val clipboardJson = JsonUtil.createClipboardUpdateJson(text, ownId)
 
                 Log.d(TAG, "Sending clipboard JSON: $clipboardJson")
 
@@ -147,9 +152,19 @@ object ClipboardSyncManager {
     /**
      * Handle clipboard update received from desktop
      */
-    fun handleClipboardUpdate(context: Context, text: String) {
+    fun handleClipboardUpdate(context: Context, text: String, origin: String? = null): Boolean {
         try {
+            // MULTI-DEVICE: ignore our own copies relayed back by the hub (returns false = dropped, no toast/history/re-send)
+            ownId = ownId ?: DeviceInfoUtil.getDeviceId(context)
+            if (origin != null && origin == ownId) {
+                Log.d(TAG, "[MultiDevice] drop own-origin clipboard"); return false
+            }
+            val now = System.currentTimeMillis()
+            if ((text == lastSentText && now - lastSentAt < 10_000) || text == ClipboardUtil.getClipboardText(context)) {
+                Log.d(TAG, "[MultiDevice] drop same-text clipboard (just sent / already current)"); return false
+            }
             lastReceivedText = text
+            lastReceivedAt = System.currentTimeMillis()
 
             // Always update clipboard with the full received text
             val updated = ClipboardUtil.setClipboardText(context, text)
@@ -179,6 +194,7 @@ object ClipboardSyncManager {
         } catch (e: Exception) {
             Log.e(TAG, "Error handling clipboard update: ${e.message}")
         }
+        return true
     }
 
     /**
@@ -203,9 +219,12 @@ object ClipboardSyncManager {
      */
     fun syncTextToDesktop(text: String) {
         if (text.isBlank()) return
+        // MULTI-DEVICE: don't echo text we just applied from the hub (root bridge sees it as a new copy)
+        if (text == lastReceivedText && System.currentTimeMillis() - lastReceivedAt < 10_000) return
 
+        lastSentText = text; lastSentAt = System.currentTimeMillis() // MULTI-DEVICE
         try {
-            val clipboardJson = JsonUtil.createClipboardUpdateJson(text)
+            val clipboardJson = JsonUtil.createClipboardUpdateJson(text, ownId)
 
             val success = WebSocketUtil.sendMessage(clipboardJson)
             if (success) {

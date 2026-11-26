@@ -64,6 +64,15 @@ interface AirSyncRepository {
     suspend fun setClipboardHistoryEnabled(enabled: Boolean)
     fun getClipboardHistoryEnabled(): Flow<Boolean>
 
+    suspend fun setRootClipboardEnabled(enabled: Boolean)
+    fun getRootClipboardEnabled(): Flow<Boolean>
+
+    suspend fun setReconnectWifiSsids(ssids: Set<String>)
+    fun getReconnectWifiSsids(): Flow<Set<String>>
+
+    suspend fun setHideIdleMediaBar(enabled: Boolean)
+    fun getHideIdleMediaBar(): Flow<Boolean>
+
     // Auto reconnect settings
     suspend fun setAutoReconnectEnabled(enabled: Boolean)
     fun getAutoReconnectEnabled(): Flow<Boolean>

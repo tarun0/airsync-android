@@ -11,6 +11,9 @@ import com.sameerasw.airsync.R
 fun ClipboardFeaturesCard(
     isClipboardSyncEnabled: Boolean,
     onToggleClipboardSync: (Boolean) -> Unit,
+    // Root-based background capture (no Accessibility service)
+    isRootClipboardEnabled: Boolean,
+    onToggleRootClipboard: (Boolean) -> Unit,
     // Continue Browsing props
     isContinueBrowsingEnabled: Boolean,
     onToggleContinueBrowsing: (Boolean) -> Unit,
@@ -29,6 +32,13 @@ fun ClipboardFeaturesCard(
             description = "Update Android clipboard automatically",
             isChecked = isClipboardSyncEnabled,
             onCheckedChange = onToggleClipboardSync
+        )
+        IconToggleItem(
+            iconRes = R.drawable.rounded_history_24,
+            title = "Background capture (root)",
+            description = "Send copies from any app without the Accessibility service. Asks for root once.",
+            isChecked = isRootClipboardEnabled,
+            onCheckedChange = onToggleRootClipboard
         )
         IconToggleItem(
             iconRes = R.drawable.outline_open_in_browser_24,

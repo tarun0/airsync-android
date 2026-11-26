@@ -150,6 +150,30 @@ class AirSyncRepositoryImpl(
         return dataStoreManager.getClipboardHistoryEnabled()
     }
 
+    override suspend fun setRootClipboardEnabled(enabled: Boolean) {
+        dataStoreManager.setRootClipboardEnabled(enabled)
+    }
+
+    override fun getRootClipboardEnabled(): Flow<Boolean> {
+        return dataStoreManager.getRootClipboardEnabled()
+    }
+
+    override suspend fun setReconnectWifiSsids(ssids: Set<String>) {
+        dataStoreManager.setReconnectWifiSsids(ssids)
+    }
+
+    override fun getReconnectWifiSsids(): Flow<Set<String>> {
+        return dataStoreManager.getReconnectWifiSsids()
+    }
+
+    override suspend fun setHideIdleMediaBar(enabled: Boolean) {
+        dataStoreManager.setHideIdleMediaBar(enabled)
+    }
+
+    override fun getHideIdleMediaBar(): Flow<Boolean> {
+        return dataStoreManager.getHideIdleMediaBar()
+    }
+
     override suspend fun setAutoReconnectEnabled(enabled: Boolean) {
         dataStoreManager.setAutoReconnectEnabled(enabled)
     }
